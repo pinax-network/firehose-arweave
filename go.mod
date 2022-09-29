@@ -33,3 +33,10 @@ require (
 )
 
 replace github.com/ShinyTrinkets/overseer => github.com/streamingfast/overseer v0.2.1-0.20210326144022-ee491780e3ef
+
+// Pinax dependency replacements for authentication and metering
+replace (
+	github.com/streamingfast/dauth => github.com/pinax-network/dauth v0.1.0
+	github.com/streamingfast/dmetering => github.com/pinax-network/dmetering v0.1.0
+	github.com/streamingfast/firehose => github.com/pinax-network/firehose v0.0.0-20220928170757-79bfe0c49eec
+)
