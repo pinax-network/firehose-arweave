@@ -1,0 +1,2 @@
+generate.sh - Tue Dec 12 16:34:49 CET 2023 - work
+streamingfast/firehose-arweave/proto revision: 9565470

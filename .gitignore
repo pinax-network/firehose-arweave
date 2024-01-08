@@ -1,0 +1,13 @@
+.idea/
+.DS_Store
+test.out
+
+*profile.out
+.envrc*
+*.spkg
+
+/firearweave
+/dist
+
+firehose-data
+!firehose-data/config
