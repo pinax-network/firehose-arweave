@@ -23,24 +23,15 @@ func Chain() *firecore.Chain[*pbantelope.Block] {
 	}
 
 	chain = &firecore.Chain[*pbantelope.Block]{
-		ShortName:            "antelope",
-		LongName:             "Antelope",
-		ExecutableName:       "nodeos",
+		ShortName:            "arweave",
+		LongName:             "Arweave",
+		ExecutableName:       "firearweave",
 		FullyQualifiedModule: "github.com/pinax-network/firehose-arweave",
 		Version:              version,
 
 		FirstStreamableBlock: 2,
 
 		BlockFactory: func() firecore.Block { return new(pbantelope.Block) },
-
-		//BlockIndexerFactories: map[string]firecore.BlockIndexerFactory[*pbantelope.Block]{
-		//	transform.ReceiptAddressIndexShortName: transform.NewNearBlockIndexer,
-		//},
-		//
-		//BlockTransformerFactories: map[protoreflect.FullName]firecore.BlockTransformerFactory{
-		//	transform.HeaderOnlyMessageName:    transform.NewHeaderOnlyTransformFactory,
-		//	transform.ReceiptFilterMessageName: transform.BasicReceiptFilterFactory,
-		//},
 
 		ConsoleReaderFactory: codec.NewConsoleReader,
 
@@ -50,8 +41,6 @@ func Chain() *firecore.Chain[*pbantelope.Block] {
 			flags.String("reader-node-key-file", "./node_key.json", "Node key configuration file, the file is copied inside the {data-dir}/reader/data folder. Use {hostname} label to use with short hostname in path")
 			flags.Bool("reader-node-overwrite-node-files", false, "Force download of node-key and config files even if they already exist on the machine.")
 		},
-
-		// ReaderNodeBootstrapperFactory: newReaderNodeBootstrapper,
 
 		Tools: &firecore.ToolsConfig[*pbantelope.Block]{
 
@@ -66,13 +55,6 @@ func Chain() *firecore.Chain[*pbantelope.Block] {
 			},
 
 			SanitizeBlockForCompare: sanitizeBlockForCompare,
-
-			//TransformFlags: map[string]*firecore.TransformFlag{
-			//	"receipt-account-filters": {
-			//		Description: "Comma-separated accounts to use as filter/index. If it contains a colon (:), it will be interpreted as <prefix>:<suffix> (each of which can be empty, ex: 'hello:' or ':world')",
-			//		Parser:      parseReceiptAccountFilters,
-			//	},
-			//},
 		},
 	}
 

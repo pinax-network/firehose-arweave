@@ -1,4 +1,4 @@
-// Copyright 2019 dfuse Platform Inc.
+// Copyright 2021 dfuse Platform Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,6 @@ package codec
 
 import (
 	"github.com/streamingfast/logging"
-	"go.uber.org/zap"
 )
 
-var zlog *zap.Logger
-
-func init() {
-	zlog, _ = logging.PackageLogger("codec", "github.com/pinax-network/firehose-arweave/codec")
-}
+var zlog, tracer = logging.PackageLogger("codec", "github.com/ChainSafe/firehose-arweave/codec")

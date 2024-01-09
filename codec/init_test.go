@@ -1,26 +1,23 @@
 package codec
 
 import (
-	"github.com/pinax-network/firehose-arweave/types"
+	"testing"
+
 	"github.com/streamingfast/logging"
-	"google.golang.org/protobuf/encoding/protojson"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 )
 
-var zlogTest, _ = logging.PackageLogger("firearweave", "github.com/pinax-network/firehose-arweave/codec.tests")
-
 func init() {
-	types.InitFireCore()
 	logging.InstantiateLoggers()
 }
 
-type ObjectReader func() (interface{}, error)
+func assertProtoEqual(t *testing.T, expected, actual proto.Message) {
+	t.Helper()
 
-func MarshalIndentToString(m proto.Message, indent string) (string, error) {
-	res, err := protojson.MarshalOptions{Indent: indent}.Marshal(m)
-	if err != nil {
-		return "", err
+	// We use a custom comparison function and than rely on a standard `assert.Equal` so we get some
+	// diffing information. Ideally, a better diff would be displayed, good enough for now.
+	if !proto.Equal(expected, actual) {
+		assert.Equal(t, expected, actual)
 	}
-
-	return string(res), err
 }
