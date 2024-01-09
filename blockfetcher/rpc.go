@@ -2,36 +2,40 @@ package blockfetcher
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/abourget/llerrgroup"
+	pbarweave "github.com/pinax-network/firehose-arweave/types/pb/sf/arweave/type/v1"
 	pbbstream "github.com/streamingfast/bstream/pb/sf/bstream/v1"
+
 	"github.com/streamingfast/eth-go/rpc"
-	pbeth "github.com/streamingfast/firehose-ethereum/types/pb/sf/ethereum/type/v2"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type ToEthBlock func(in *rpc.Block, receipts map[string]*rpc.TransactionReceipt) (*pbeth.Block, map[string]bool)
+const CONFIRMS uint64 = 20
+
+type ToArwBlock func(in *rpc.Block, receipts map[string]*rpc.TransactionReceipt) (*pbarweave.Block, map[string]bool)
 
 type BlockFetcher struct {
 	rpcClient                *rpc.Client
 	latest                   uint64
 	latestBlockRetryInterval time.Duration
 	fetchInterval            time.Duration
-	toEthBlock               ToEthBlock
+	toArwBlock               ToArwBlock
 	lastFetchAt              time.Time
 	logger                   *zap.Logger
 }
 
-func NewBlockFetcher(rpcClient *rpc.Client, intervalBetweenFetch, latestBlockRetryInterval time.Duration, toEthBlock ToEthBlock, logger *zap.Logger) *BlockFetcher {
+func NewBlockFetcher(rpcClient *rpc.Client, intervalBetweenFetch, latestBlockRetryInterval time.Duration, toArwBlock ToArwBlock, logger *zap.Logger) *BlockFetcher {
 	return &BlockFetcher{
 		rpcClient:                rpcClient,
 		latestBlockRetryInterval: latestBlockRetryInterval,
-		toEthBlock:               toEthBlock,
+		toArwBlock:               toArwBlock,
 		fetchInterval:            intervalBetweenFetch,
 		logger:                   logger,
 	}
@@ -77,19 +81,19 @@ func (f *BlockFetcher) Fetch(ctx context.Context, blockNum uint64) (block *pbbst
 		return nil, fmt.Errorf("fetching logs for block %d %q: %w", rpcBlock.Number, rpcBlock.Hash.Pretty(), err)
 	}
 
-	ethBlock, _ := f.toEthBlock(rpcBlock, receipts)
-	anyBlock, err := anypb.New(ethBlock)
+	arwBlock, _ := f.toArwBlock(rpcBlock, receipts)
+	anyBlock, err := anypb.New(arwBlock)
 	if err != nil {
 		return nil, fmt.Errorf("create any block: %w", err)
 	}
 
 	return &pbbstream.Block{
-		Number:    ethBlock.Number,
-		Id:        ethBlock.GetFirehoseBlockID(),
-		ParentId:  ethBlock.GetFirehoseBlockParentID(),
-		Timestamp: timestamppb.New(ethBlock.GetFirehoseBlockTime()),
-		LibNum:    ethBlock.LIBNum(),
-		ParentNum: ethBlock.GetFirehoseBlockParentNumber(),
+		Number:    arwBlock.Num(),
+		Id:        hex.EncodeToString(arwBlock.IndepHash),
+		ParentId:  arwBlock.PreviousID(),
+		Timestamp: timestamppb.New(arwBlock.GetFirehoseBlockTime()),
+		LibNum:    arwBlock.LIBNum(),
+		ParentNum: arwBlock.GetFirehoseBlockParentNumber(),
 		Payload:   anyBlock,
 	}, nil
 }

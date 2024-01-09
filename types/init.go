@@ -15,13 +15,13 @@
 package types
 
 import (
-	pbantelope "github.com/pinax-network/firehose-arweave/types/pb/sf/antelope/type/v1"
+	pbarweave "github.com/pinax-network/firehose-arweave/types/pb/sf/arweave/type/v1"
 	"github.com/streamingfast/bstream"
 	pbbstream "github.com/streamingfast/bstream/pb/sf/bstream/v1"
 	firecore "github.com/streamingfast/firehose-core"
 )
 
-var _ firecore.Block = (*pbantelope.Block)(nil)
+var _ firecore.Block = (*pbarweave.Block)(nil)
 
 var encoder = firecore.NewBlockEncoder()
 
@@ -41,6 +41,6 @@ func InitFireCore() {
 	bstream.GetProtocolFirstStreamableBlock = 2
 }
 
-func BlockFromProto(b *pbantelope.Block, libNum uint64) (*pbbstream.Block, error) {
+func BlockFromProto(b *pbarweave.Block, libNum uint64) (*pbbstream.Block, error) {
 	return encoder.Encode(firecore.BlockEnveloppe{Block: b, LIBNum: libNum})
 }

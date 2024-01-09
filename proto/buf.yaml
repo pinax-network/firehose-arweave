@@ -1,5 +1,5 @@
 version: v1
-name: buf.build/pinax/firehose-arweave
+name: buf.build/pinax/firehose-antelope
 
 build:
   excludes:

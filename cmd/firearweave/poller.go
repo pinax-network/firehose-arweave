@@ -60,7 +60,7 @@ func pollerRunE(logger *zap.Logger, tracer logging.Tracer) firecore.CommandExecu
 
 		fetchInterval := sflags.MustGetDuration(cmd, "interval-between-fetch")
 
-		fetcher := blockfetcher.NewSilkwormBlockFetcher(rpcClient, fetchInterval, 1*time.Second, logger)
+		fetcher := blockfetcher.NewThegariiBlockFetcher(rpcClient, fetchInterval, 1*time.Second, logger)
 		handler := blockpoller.NewFireBlockHandler("type.googleapis.com/sf.ethereum.type.v2.Block")
 		poller := blockpoller.New(fetcher, handler, blockpoller.WithStoringState(stateDir), blockpoller.WithLogger(logger))
 

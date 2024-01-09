@@ -1,8 +1,7 @@
 package main
 
 import (
-	"github.com/pinax-network/firehose-arweave/codec"
-	pbantelope "github.com/pinax-network/firehose-arweave/types/pb/sf/antelope/type/v1"
+	pbarweave "github.com/pinax-network/firehose-arweave/types/pb/sf/arweave/type/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	firecore "github.com/streamingfast/firehose-core"
@@ -15,14 +14,14 @@ func main() {
 	fhCmd.Main(Chain())
 }
 
-var chain *firecore.Chain[*pbantelope.Block]
+var chain *firecore.Chain[*pbarweave.Block]
 
-func Chain() *firecore.Chain[*pbantelope.Block] {
+func Chain() *firecore.Chain[*pbarweave.Block] {
 	if chain != nil {
 		return chain
 	}
 
-	chain = &firecore.Chain[*pbantelope.Block]{
+	chain = &firecore.Chain[*pbarweave.Block]{
 		ShortName:            "arweave",
 		LongName:             "Arweave",
 		ExecutableName:       "firearweave",
@@ -31,9 +30,7 @@ func Chain() *firecore.Chain[*pbantelope.Block] {
 
 		FirstStreamableBlock: 2,
 
-		BlockFactory: func() firecore.Block { return new(pbantelope.Block) },
-
-		ConsoleReaderFactory: codec.NewConsoleReader,
+		BlockFactory: func() firecore.Block { return new(pbarweave.Block) },
 
 		RegisterExtraStartFlags: func(flags *pflag.FlagSet) {
 			flags.String("reader-node-config-file", "", "Node configuration file, the file is copied inside the {data-dir}/reader/data folder Use {hostname} label to use short hostname in path")
@@ -42,19 +39,19 @@ func Chain() *firecore.Chain[*pbantelope.Block] {
 			flags.Bool("reader-node-overwrite-node-files", false, "Force download of node-key and config files even if they already exist on the machine.")
 		},
 
-		Tools: &firecore.ToolsConfig[*pbantelope.Block]{
+		Tools: &firecore.ToolsConfig[*pbarweave.Block]{
 
-			RegisterExtraCmd: func(chain *firecore.Chain[*pbantelope.Block], parent *cobra.Command, zlog *zap.Logger, tracer logging.Tracer) error {
+			RegisterExtraCmd: func(chain *firecore.Chain[*pbarweave.Block], parent *cobra.Command, zlog *zap.Logger, tracer logging.Tracer) error {
 				//toolsCmd.AddCommand(newToolsGenerateNodeKeyCmd(chain))
 				//toolsCmd.AddCommand(newToolsBackfillCmd(zlog))
 				parent.AddCommand(newPollerCmd(zlog, tracer))
 				parent.AddCommand(newSilkwormPollerCmd(zlog, tracer))
-				parent.AddCommand(newCheckBlocksCmd(zlog))
+				// parent.AddCommand(newCheckBlocksCmd(zlog))
 
 				return nil
 			},
 
-			SanitizeBlockForCompare: sanitizeBlockForCompare,
+			// SanitizeBlockForCompare: sanitizeBlockForCompare,
 		},
 	}
 

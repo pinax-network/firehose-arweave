@@ -6,4 +6,4 @@ Foremost, this provides `sf.antelope.types.v1.Block` which is used for consuming
 
 Useful links:
 - Documentation: [https://substreams.streamingfast.io/](https://substreams.streamingfast.io/) ([Firehose Docs](https://firehose.streamingfast.io/))
-- Source: [https://github.com/pinax-network/firehose-arweave](https://github.com/pinax-network/firehose-arweave)
+- Source: [https://github.com/pinax-network/firehose-antelope](https://github.com/pinax-network/firehose-antelope)
