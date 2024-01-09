@@ -16,7 +16,7 @@
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd ../.. && pwd )"
 
 # Protobuf definitions
-PROTO_ANTELOPE=${2:-"$ROOT/proto"}
+PROTO_ARWEAVE=${2:-"$ROOT/proto"}
 
 function main() {
   checks
@@ -24,7 +24,7 @@ function main() {
   set -e
   cd "$ROOT/types/pb" &> /dev/null
 
-  generate "sf/antelope/type/v1/type.proto"
+  generate "sf/arweave/type/v1/type.proto"
 
   echo "generate.sh - `date` - `whoami`" > ./last_generate.txt
   echo "streamingfast/firehose-arweave/proto revision: `GIT_DIR=$ROOT/.git git log -n 1 --pretty=format:%h -- proto`" >> ./last_generate.txt
@@ -40,7 +40,7 @@ function generate() {
     fi
 
     for file in "$@"; do
-      protoc -I$PROTO_ANTELOPE \
+      protoc -I$PROTO_ARWEAVE \
         --go_out=. --go_opt=paths=source_relative \
         --go-grpc_out=. --go-grpc_opt=paths=source_relative,require_unimplemented_servers=false \
          $base$file
