@@ -1,0 +1,7 @@
+start:
+  args:
+    - reader-node-stdin
+  flags:
+    log-verbosity: 0
+    log-to-file: false
+    reader-node-grpc-listen-addr: :9000

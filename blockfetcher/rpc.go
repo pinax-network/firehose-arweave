@@ -22,7 +22,7 @@ const CONFIRMS uint64 = 20
 type ToArwBlock func(in *rpc.Block, receipts map[string]*rpc.TransactionReceipt) (*pbarweave.Block, map[string]bool)
 
 type BlockFetcher struct {
-	rpcClient                *rpc.Client
+	rpcClient                *rpc.Client // Change to own rpc client
 	latest                   uint64
 	latestBlockRetryInterval time.Duration
 	fetchInterval            time.Duration

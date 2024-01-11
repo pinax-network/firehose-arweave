@@ -77,18 +77,11 @@ func Chain() *firecore.Chain[*pbarweave.Block] {
 		},
 
 		Tools: &firecore.ToolsConfig[*pbarweave.Block]{
-
 			RegisterExtraCmd: func(chain *firecore.Chain[*pbarweave.Block], parent *cobra.Command, zlog *zap.Logger, tracer logging.Tracer) error {
-				//toolsCmd.AddCommand(newToolsGenerateNodeKeyCmd(chain))
-				//toolsCmd.AddCommand(newToolsBackfillCmd(zlog))
 				parent.AddCommand(newPollerCmd(zlog, tracer))
-				parent.AddCommand(newSilkwormPollerCmd(zlog, tracer))
-				// parent.AddCommand(newCheckBlocksCmd(zlog))
-
+				parent.AddCommand(newThegariiPollerCmd(zlog, tracer))
 				return nil
 			},
-
-			// SanitizeBlockForCompare: sanitizeBlockForCompare,
 		},
 	}
 

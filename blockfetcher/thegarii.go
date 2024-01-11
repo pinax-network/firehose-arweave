@@ -12,6 +12,7 @@ import (
 )
 
 func toArwBlock(in *rpc.Block, receipts map[string]*rpc.TransactionReceipt) (*pbarweave.Block, map[string]bool) {
+	// TODO: convert to arweave block
 	return nil, nil
 }
 
