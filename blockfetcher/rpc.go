@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"sync"
 	"time"
 
-	"github.com/abourget/llerrgroup"
+	"github.com/pinax-network/firehose-arweave/thegarii"
 	pbarweave "github.com/pinax-network/firehose-arweave/types/pb/sf/arweave/type/v1"
 	pbbstream "github.com/streamingfast/bstream/pb/sf/bstream/v1"
 
@@ -22,7 +21,7 @@ const CONFIRMS uint64 = 20
 type ToArwBlock func(in *rpc.Block, receipts map[string]*rpc.TransactionReceipt) (*pbarweave.Block, map[string]bool)
 
 type BlockFetcher struct {
-	rpcClient                *rpc.Client // Change to own rpc client
+	rpcClient                *thegarii.Client
 	latest                   uint64
 	latestBlockRetryInterval time.Duration
 	fetchInterval            time.Duration
@@ -31,7 +30,7 @@ type BlockFetcher struct {
 	logger                   *zap.Logger
 }
 
-func NewBlockFetcher(rpcClient *rpc.Client, intervalBetweenFetch, latestBlockRetryInterval time.Duration, toArwBlock ToArwBlock, logger *zap.Logger) *BlockFetcher {
+func NewBlockFetcher(rpcClient *thegarii.Client, intervalBetweenFetch, latestBlockRetryInterval time.Duration, toArwBlock ToArwBlock, logger *zap.Logger) *BlockFetcher {
 	return &BlockFetcher{
 		rpcClient:                rpcClient,
 		latestBlockRetryInterval: latestBlockRetryInterval,
@@ -44,10 +43,11 @@ func NewBlockFetcher(rpcClient *rpc.Client, intervalBetweenFetch, latestBlockRet
 func (f *BlockFetcher) Fetch(ctx context.Context, blockNum uint64) (block *pbbstream.Block, err error) {
 	f.logger.Debug("fetching block", zap.Uint64("block_num", blockNum))
 	for f.latest < blockNum {
-		f.latest, err = f.rpcClient.LatestBlockNum(ctx)
+		latestBlock, err := f.rpcClient.GetCurrentBlock()
 		if err != nil {
 			return nil, fmt.Errorf("fetching latest block num: %w", err)
 		}
+		f.latest = latestBlock.Height
 
 		f.logger.Info("got latest block", zap.Uint64("latest", f.latest), zap.Uint64("block_num", blockNum))
 
@@ -63,65 +63,29 @@ func (f *BlockFetcher) Fetch(ctx context.Context, blockNum uint64) (block *pbbst
 		time.Sleep(f.fetchInterval - sinceLastFetch)
 	}
 
-	rpcBlock, err := f.rpcClient.GetBlockByNumber(ctx, rpc.BlockNumber(blockNum), rpc.WithGetBlockFullTransaction())
+	rpcBlock, err := f.rpcClient.GetBlockByHeight(blockNum)
 	if err != nil {
 		return nil, fmt.Errorf("fetching block %d: %w", blockNum, err)
 	}
 
-	receipts, err := FetchReceipts(ctx, rpcBlock, f.rpcClient)
-	if err != nil {
-		return nil, fmt.Errorf("fetching receipts for block %d %q: %w", rpcBlock.Number, rpcBlock.Hash.Pretty(), err)
-	}
-
-	f.logger.Debug("fetched receipts", zap.Int("count", len(receipts)))
-
 	f.lastFetchAt = time.Now()
 
 	if err != nil {
-		return nil, fmt.Errorf("fetching logs for block %d %q: %w", rpcBlock.Number, rpcBlock.Hash.Pretty(), err)
+		return nil, fmt.Errorf("fetching logs for block %d %q: %w", rpcBlock.Height, rpcBlock.Hash, err)
 	}
 
-	arwBlock, _ := f.toArwBlock(rpcBlock, receipts)
-	anyBlock, err := anypb.New(arwBlock)
+	anyBlock, err := anypb.New(rpcBlock)
 	if err != nil {
 		return nil, fmt.Errorf("create any block: %w", err)
 	}
 
 	return &pbbstream.Block{
-		Number:    arwBlock.Num(),
-		Id:        hex.EncodeToString(arwBlock.IndepHash),
-		ParentId:  arwBlock.PreviousID(),
-		Timestamp: timestamppb.New(arwBlock.GetFirehoseBlockTime()),
-		LibNum:    arwBlock.LIBNum(),
-		ParentNum: arwBlock.GetFirehoseBlockParentNumber(),
+		Number:    rpcBlock.Num(),
+		Id:        hex.EncodeToString(rpcBlock.IndepHash),
+		ParentId:  rpcBlock.PreviousID(),
+		Timestamp: timestamppb.New(rpcBlock.GetFirehoseBlockTime()),
+		LibNum:    rpcBlock.LIBNum(),
+		ParentNum: rpcBlock.GetFirehoseBlockParentNumber(),
 		Payload:   anyBlock,
 	}, nil
-}
-
-func FetchReceipts(ctx context.Context, block *rpc.Block, client *rpc.Client) (out map[string]*rpc.TransactionReceipt, err error) {
-	out = make(map[string]*rpc.TransactionReceipt)
-	lock := sync.Mutex{}
-
-	eg := llerrgroup.New(10)
-	for _, tx := range block.Transactions.Transactions {
-		if eg.Stop() {
-			continue // short-circuit the loop if we got an error
-		}
-		eg.Go(func() error {
-			receipt, err := client.TransactionReceipt(ctx, tx.Hash)
-			if err != nil {
-				return fmt.Errorf("fetching receipt for tx %q: %w", tx.Hash.Pretty(), err)
-			}
-			lock.Lock()
-			out[tx.Hash.Pretty()] = receipt
-			lock.Unlock()
-			return err
-		})
-	}
-
-	if err := eg.Wait(); err != nil {
-		return nil, err
-	}
-
-	return
 }

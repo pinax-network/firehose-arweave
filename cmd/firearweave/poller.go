@@ -1,12 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"path"
+	"strconv"
+	"time"
 
+	"github.com/pinax-network/firehose-arweave/blockfetcher"
 	"github.com/pinax-network/firehose-arweave/thegarii"
 	"github.com/spf13/cobra"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/cli/sflags"
 	firecore "github.com/streamingfast/firehose-core"
+	"github.com/streamingfast/firehose-core/blockpoller"
 	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
@@ -44,35 +50,28 @@ func pollerRunE(logger *zap.Logger, tracer logging.Tracer) firecore.CommandExecu
 
 		logger.Info("launching firehose-arweave poller", zap.String("rpc_endpoint", rpcEndpoint), zap.String("data_dir", dataDir), zap.String("state_dir", stateDir))
 
-		// rpcClient := rpc.NewClient(rpcEndpoint)
+		rpcClient := thegarii.NewClient(rpcEndpoint)
 
-		// firstStreamableBlock, err := strconv.ParseUint(args[1], 10, 64)
-		// if err != nil {
-		// 	return fmt.Errorf("unable to parse first streamable block %d: %w", firstStreamableBlock, err)
-		// }
+		firstStreamableBlock, err := strconv.ParseUint(args[1], 10, 64)
+		if err != nil {
+			return fmt.Errorf("unable to parse first streamable block %d: %w", firstStreamableBlock, err)
+		}
 
-		// fetchInterval := sflags.MustGetDuration(cmd, "interval-between-fetch")
+		fetchInterval := sflags.MustGetDuration(cmd, "interval-between-fetch")
 
-		// fetcher := blockfetcher.NewThegariiBlockFetcher(rpcClient, fetchInterval, 1*time.Second, logger)
-		// handler := blockpoller.NewFireBlockHandler("type.googleapis.com/sf.ethereum.type.v2.Block")
-		// poller := blockpoller.New(fetcher, handler, blockpoller.WithStoringState(stateDir), blockpoller.WithLogger(logger))
+		fetcher := blockfetcher.NewThegariiBlockFetcher(rpcClient, fetchInterval, 1*time.Second, logger)
+		handler := blockpoller.NewFireBlockHandler("type.googleapis.com/sf.arweave.type.v1.Block")
+		poller := blockpoller.New(fetcher, handler, blockpoller.WithStoringState(stateDir), blockpoller.WithLogger(logger))
 
-		// latestBlock, err := rpcClient.GetBlockByNumber(ctx, rpc.LatestBlock)
-		// if err != nil {
-		// 	return fmt.Errorf("getting latest block: %w", err)
-		// }
+		latestBlock, err := rpcClient.GetCurrentBlock()
+		if err != nil {
+			return fmt.Errorf("getting latest block: %w", err)
+		}
 
-		// latestFinalizedBlock, err := rpcClient.GetBlockByNumber(ctx, rpc.BlockNumber(uint64(latestBlock.Number)))
-		// if err != nil {
-		// 	return fmt.Errorf("getting latest finalized block: %w", err)
-		// }
-
-		// err = poller.Run(ctx, firstStreamableBlock, bstream.NewBlockRef(latestFinalizedBlock.Hash.String(), uint64(latestFinalizedBlock.Number)))
-		// if err != nil {
-		// 	return fmt.Errorf("running poller: %w", err)
-		// }
-
-		_ = thegarii.NewClient(rpcEndpoint)
+		err = poller.Run(cmd.Context(), firstStreamableBlock, bstream.NewBlockRef(string(latestBlock.IndepHash), uint64(latestBlock.Height)))
+		if err != nil {
+			return fmt.Errorf("running poller: %w", err)
+		}
 
 		return nil
 	}

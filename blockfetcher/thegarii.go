@@ -6,6 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/pinax-network/firehose-arweave/thegarii"
 	pbarweave "github.com/pinax-network/firehose-arweave/types/pb/sf/arweave/type/v1"
 	pbbstream "github.com/streamingfast/bstream/pb/sf/bstream/v1"
 	"github.com/streamingfast/eth-go/rpc"
@@ -20,7 +21,7 @@ type ThegariiBlockFetcher struct {
 	fetcher *BlockFetcher
 }
 
-func NewThegariiBlockFetcher(rpcClient *rpc.Client, intervalBetweenFetch time.Duration, latestBlockRetryInterval time.Duration, logger *zap.Logger) *ThegariiBlockFetcher {
+func NewThegariiBlockFetcher(rpcClient *thegarii.Client, intervalBetweenFetch time.Duration, latestBlockRetryInterval time.Duration, logger *zap.Logger) *ThegariiBlockFetcher {
 	fetcher := NewBlockFetcher(rpcClient, intervalBetweenFetch, latestBlockRetryInterval, toArwBlock, logger)
 	return &ThegariiBlockFetcher{
 		fetcher: fetcher,

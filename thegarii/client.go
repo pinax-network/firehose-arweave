@@ -37,15 +37,16 @@ func NewClient(endpoint string) *Client {
 }
 
 func (c *Client) get(path string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", c.endpoint+path, nil)
+	res, err := http.Get(c.endpoint + path)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.client.Do(req)
+	return res, nil
 }
 
 func prepareResponse(res *http.Response) (map[string]interface{}, error) {
+	defer res.Body.Close()
 	if res.StatusCode == http.StatusOK {
 		b, err := io.ReadAll(res.Body)
 		if err != nil {
@@ -162,12 +163,16 @@ func (c *Client) parseBlock(res *http.Response) (*pbarweave.Block, error) {
 		return nil, err
 	}
 
-	block.CumulativeDiff, err = parseBigInt(m["cumulative_diff"])
-	if err != nil {
-		return nil, err
+	if m["cumulative_diff"] != nil {
+		block.CumulativeDiff, err = parseBigInt(m["cumulative_diff"])
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	block.HashListMerkle = []byte(m["hash_list_merkle"].(string))
+	if m["hash_list_merkle"] != nil {
+		block.HashListMerkle = []byte(m["hash_list_merkle"].(string))
+	}
 
 	// TODO: Parse ProofOfAccess
 
@@ -247,6 +252,14 @@ func (c *Client) GetCurrentBlock() (*pbarweave.Block, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// b, err := io.ReadAll(res.Body)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// blk := &pbarweave.Block{}
+	// UnmarshalBlock(b, blk)
 
 	block, err := c.parseBlock(res)
 	if err != nil {
