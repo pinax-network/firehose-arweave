@@ -36,6 +36,7 @@ func NewClient(endpoint string) *Client {
 	}
 }
 
+// TODO: Handle status code here and return body instead of full response
 func (c *Client) get(path string) (*http.Response, error) {
 	res, err := http.Get(c.endpoint + path)
 	if err != nil {
@@ -82,6 +83,7 @@ func parseBigInt(b interface{}) (*pbarweave.BigInt, error) {
 	return bi, nil
 }
 
+// TODO: Make it less hardcoded
 func (c *Client) parseBlock(res *http.Response) (*pbarweave.Block, error) {
 	m, err := prepareResponse(res)
 	if err != nil {
@@ -146,7 +148,7 @@ func (c *Client) parseBlock(res *http.Response) (*pbarweave.Block, error) {
 	block.WalletList = []byte(m["wallet_list"].(string))
 	block.RewardAddr = []byte(m["reward_addr"].(string))
 
-	// blk.Tags = make([]*pbarweave.Tag, 0)
+	// TODO: Parse Tags
 
 	block.RewardPool, err = parseBigInt(m["reward_pool"])
 	if err != nil {
@@ -179,6 +181,7 @@ func (c *Client) parseBlock(res *http.Response) (*pbarweave.Block, error) {
 	return block, nil
 }
 
+// TODO: Make it less hardcoded
 func (c *Client) parseTx(res *http.Response) (*pbarweave.Transaction, error) {
 	m, err := prepareResponse(res)
 	if err != nil {
@@ -252,14 +255,6 @@ func (c *Client) GetCurrentBlock() (*pbarweave.Block, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// b, err := io.ReadAll(res.Body)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// blk := &pbarweave.Block{}
-	// UnmarshalBlock(b, blk)
 
 	block, err := c.parseBlock(res)
 	if err != nil {
