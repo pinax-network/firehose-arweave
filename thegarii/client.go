@@ -42,29 +42,29 @@ func (c *Client) get(path string) (*http.Response, error) {
 		return nil, err
 	}
 
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code %d", res.StatusCode)
+	}
+
 	return res, nil
 }
 
 func prepareResponse(res *http.Response) (map[string]interface{}, error) {
 	defer res.Body.Close()
-	if res.StatusCode == http.StatusOK {
-		b, err := io.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		var m map[string]interface{}
-
-		// TODO: Redefine Unmarshaler for BigInt handling to simplify code
-		err = json.Unmarshal(b, &m)
-		if err != nil {
-			return nil, err
-		}
-
-		return m, nil
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("unexpected status code %d", res.StatusCode)
+	var m map[string]interface{}
+
+	// TODO: Redefine Unmarshaler for BigInt handling to simplify code
+	err = json.Unmarshal(b, &m)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }
 
 func parseBigInt(b interface{}) (*pbarweave.BigInt, error) {
