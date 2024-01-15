@@ -1,2 +1,2 @@
-generate.sh - Thu 11 Jan 2024 03:48:51 PM EST - chamorin
-streamingfast/firehose-arweave/proto revision: 7166dd2
+generate.sh - Fri 12 Jan 2024 04:03:47 PM EST - chamorin
+streamingfast/firehose-arweave/proto revision: afc2e9a

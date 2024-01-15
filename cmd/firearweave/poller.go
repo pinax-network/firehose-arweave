@@ -72,11 +72,7 @@ func pollerRunE(logger *zap.Logger, tracer logging.Tracer) firecore.CommandExecu
 		// 	return fmt.Errorf("running poller: %w", err)
 		// }
 
-		rpcClient := thegarii.NewClient(rpcEndpoint)
-		_, err = rpcClient.GetBlockByHeight(200)
-		if err != nil {
-			return err
-		}
+		_ = thegarii.NewClient(rpcEndpoint)
 
 		return nil
 	}
