@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -117,21 +116,13 @@ func (c *Client) parseBlock(res *http.Response) (*pbarweave.Block, error) {
 		go func(tx string) {
 			defer wg.Done()
 
-			// get transaction by id
-			txRes, err := c.get("tx/" + tx)
+			// Get transaction by id
+			trx, err := c.GetTxById([]byte(tx))
 			if err != nil {
-				log.Println(err) // handle error appropriately
-				return
+				panic(err)
 			}
 
-			// parse transaction
-			trx, err := c.parseTx(txRes)
-			if err != nil {
-				log.Println(err) // handle error appropriately
-				return
-			}
-
-			// send transaction to channel
+			// Send transaction to channel
 			txChan <- trx
 		}(tx.(string))
 	}
