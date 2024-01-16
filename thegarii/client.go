@@ -35,13 +35,14 @@ func NewClient(endpoint string) *Client {
 	}
 }
 
-// TODO: Handle status code here and return body instead of full response
+// TODO: Return body instead of full response
 func (c *Client) get(path string) (*http.Response, error) {
 	res, err := http.Get(c.endpoint + path)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO: Handle other 200 statuses
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code %d", res.StatusCode)
 	}
@@ -135,7 +136,9 @@ func (c *Client) parseBlock(res *http.Response) (*pbarweave.Block, error) {
 		block.Txs = append(block.Txs, trx)
 	}
 
-	block.TxRoot = []byte(m["tx_root"].(string))
+	if m["tx_root"] != nil {
+		block.TxRoot = []byte(m["tx_root"].(string))
+	}
 	block.WalletList = []byte(m["wallet_list"].(string))
 	block.RewardAddr = []byte(m["reward_addr"].(string))
 
@@ -167,7 +170,15 @@ func (c *Client) parseBlock(res *http.Response) (*pbarweave.Block, error) {
 		block.HashListMerkle = []byte(m["hash_list_merkle"].(string))
 	}
 
-	// TODO: Parse ProofOfAccess
+	if m["poa"] != nil {
+		poa := m["poa"].(map[string]interface{})
+		block.Poa = &pbarweave.ProofOfAccess{
+			Option:   string(poa["option"].(string)),
+			TxPath:   []byte(poa["tx_path"].(string)),
+			DataPath: []byte(poa["data_path"].(string)),
+			Chunk:    []byte(poa["chunk"].(string)),
+		}
+	}
 
 	return block, nil
 }
