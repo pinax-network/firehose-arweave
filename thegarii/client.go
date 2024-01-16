@@ -142,7 +142,7 @@ func (c *Client) parseBlock(res *http.Response) (*pbarweave.Block, error) {
 	block.WalletList = []byte(m["wallet_list"].(string))
 	block.RewardAddr = []byte(m["reward_addr"].(string))
 
-	// TODO: Parse Tags
+	block.Tags = c.parseTags(m)
 
 	block.RewardPool, err = parseBigInt(m["reward_pool"])
 	if err != nil {
@@ -197,7 +197,7 @@ func (c *Client) parseTx(res *http.Response) (*pbarweave.Transaction, error) {
 	trx.LastTx = []byte(m["last_tx"].(string))
 	trx.Owner = []byte(m["owner"].(string))
 
-	// TODO: Parse Tags
+	trx.Tags = c.parseTags(m)
 
 	trx.Target = []byte(m["target"].(string))
 
@@ -222,6 +222,18 @@ func (c *Client) parseTx(res *http.Response) (*pbarweave.Transaction, error) {
 	}
 
 	return trx, nil
+}
+
+func (c *Client) parseTags(m map[string]interface{}) []*pbarweave.Tag {
+	tags := make([]*pbarweave.Tag, 0)
+	for _, tag := range m["tags"].([]interface{}) {
+		t := tag.(map[string]interface{})
+		tags = append(tags, &pbarweave.Tag{
+			Name:  []byte(t["name"].(string)),
+			Value: []byte(t["value"].(string)),
+		})
+	}
+	return tags
 }
 
 func (c *Client) GetBlockByHeight(height uint64) (*pbarweave.Block, error) {
